@@ -25,6 +25,9 @@ module.exports = withBundleAnalyzer({
 
         return config;
     },
+    experimental: {
+        forceSwcTransforms: true,
+    },
     i18n,
     publicRuntimeConfig: {
         INTERCOM_APP_ID: config.get("intercom.app_id"),
