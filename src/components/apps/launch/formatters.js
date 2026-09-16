@@ -69,7 +69,7 @@ const initAppLaunchValues = (
         notifyPeriodic,
         periodicPeriod,
         defaultSelectedMaxCpus,
-        defaultMaxCpuCores = defaultSelectedMaxCpus,
+        defaultMaxCPUCores = defaultSelectedMaxCpus,
         defaultMaxMemory,
         defaultOutputDir,
         resourcePresets,
@@ -104,7 +104,7 @@ const initAppLaunchValues = (
     const effectivePresetValues = (preset, step) => ({
         cpu: Math.min(
             preset.max_cpu_cores,
-            step.max_cpu_cores || defaultMaxCpuCores || 8
+            step.max_cpu_cores || defaultMaxCPUCores || 8
         ),
         memory: Math.min(
             preset.min_memory_limit,
@@ -141,9 +141,9 @@ const initAppLaunchValues = (
             step_number,
             max_cpu_cores,
             memory_limit,
-            default_max_cpu_cores = max_cpu_cores < defaultMaxCpuCores
+            default_max_cpu_cores = max_cpu_cores < defaultMaxCPUCores
                 ? max_cpu_cores
-                : defaultMaxCpuCores,
+                : defaultMaxCPUCores,
             default_cpu_cores = 0,
             default_memory = 0,
             default_disk_space = 0,

@@ -637,6 +637,40 @@ describe("initAppLaunchValues resource presets", () => {
         expect(result.requirements[0].max_cpu_cores).toBe(2);
         expect(result.requirements[0].min_memory_limit).toBe(8589934592);
     });
+
+    test("relaunch: uses defaultMaxCPUCores (not defaultSelectedMaxCpus) for clamping", () => {
+        // Preset CPU (6) is between defaultSelectedMaxCpus (4) and
+        // defaultMaxCPUCores (8). effectivePresetValues must clamp against
+        // defaultMaxCPUCores so the result matches applyPresetValues.
+        const preset = {
+            id: "preset-6cpu",
+            label: "6-CPU",
+            max_cpu_cores: 6,
+            min_memory_limit: 17179869184, // 16 GiB
+            max_gpus: 0,
+            time_limit_seconds: null,
+            is_default: true,
+            is_enabled: true,
+        };
+        const desc = {
+            ...makePresetAppDesc(
+                [
+                    {
+                        step_number: 0,
+                        default_cpu_cores: 6,
+                        default_memory: 17179869184,
+                        default_gpus: 0,
+                    },
+                ],
+                [preset]
+            ),
+            defaultSelectedMaxCpus: 4,
+            defaultMaxCPUCores: 8,
+        };
+        const result = initAppLaunchValues(t, desc);
+        expect(result.requirements[0].resource_preset_id).toBe("preset-6cpu");
+        expect(result.requirements[0].max_cpu_cores).toBe(6);
+    });
 });
 
 describe("formatSubmission strips resource_preset_id", () => {
