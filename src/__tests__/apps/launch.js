@@ -440,6 +440,8 @@ describe("initAppLaunchValues resource presets", () => {
         is_enabled: true,
     };
 
+    const GiB = 1073741824;
+
     test("applies default preset to compatible step", () => {
         const desc = makePresetAppDesc(
             [{ step_number: 0, max_cpu_cores: 8, memory_limit: 34359738368 }],
@@ -452,32 +454,69 @@ describe("initAppLaunchValues resource presets", () => {
         expect(result.requirements[0].max_gpus).toBe(0);
     });
 
-    test("clamps preset CPU to tool ceiling", () => {
-        const desc = makePresetAppDesc(
-            [{ step_number: 0, max_cpu_cores: 1, memory_limit: 34359738368 }],
-            [smallPreset]
-        );
-        const result = initAppLaunchValues(t, desc);
-        expect(result.requirements[0].max_cpu_cores).toBe(1);
-    });
-
-    test("clamps preset memory to tool ceiling", () => {
-        const desc = makePresetAppDesc(
-            [{ step_number: 0, max_cpu_cores: 8, memory_limit: 4294967296 }], // 4 GiB ceiling
-            [smallPreset]
-        );
-        const result = initAppLaunchValues(t, desc);
-        expect(result.requirements[0].min_memory_limit).toBe(4294967296);
-    });
-
-    test("does not clamp memory when tool has no memory_limit", () => {
-        const desc = makePresetAppDesc(
-            [{ step_number: 0, max_cpu_cores: 8 }],
-            [smallPreset]
-        );
-        const result = initAppLaunchValues(t, desc);
-        expect(result.requirements[0].min_memory_limit).toBe(8589934592);
-    });
+    test.each([
+        {
+            name: "CPU: step ceiling below preset",
+            preset: { ...smallPreset, max_cpu_cores: 4 },
+            step: { step_number: 0, max_cpu_cores: 1, memory_limit: 34 * GiB },
+            configOverrides: {},
+            field: "max_cpu_cores",
+            expected: 1,
+        },
+        {
+            name: "Memory: step ceiling below preset",
+            preset: smallPreset,
+            step: { step_number: 0, max_cpu_cores: 8, memory_limit: 4 * GiB },
+            configOverrides: {},
+            field: "min_memory_limit",
+            expected: 4 * GiB,
+        },
+        {
+            name: "Memory: no step ceiling and no config → preset value used",
+            preset: smallPreset,
+            step: { step_number: 0, max_cpu_cores: 8 },
+            configOverrides: {},
+            field: "min_memory_limit",
+            expected: 8 * GiB,
+        },
+        {
+            name: "CPU: config default clamps when no step ceiling",
+            preset: { ...smallPreset, max_cpu_cores: 12 },
+            step: { step_number: 0 },
+            configOverrides: { defaultMaxCPUCores: 8 },
+            field: "max_cpu_cores",
+            expected: 8,
+        },
+        {
+            name: "Memory: config default clamps when no step ceiling",
+            preset: { ...smallPreset, min_memory_limit: 32 * GiB },
+            step: { step_number: 0 },
+            configOverrides: { defaultMaxMemory: 16 * GiB },
+            field: "min_memory_limit",
+            expected: 16 * GiB,
+        },
+        {
+            name: "CPU: step ceiling wins over config defaults",
+            preset: { ...smallPreset, max_cpu_cores: 6 },
+            step: { step_number: 0, max_cpu_cores: 3 },
+            configOverrides: {
+                defaultMaxCPUCores: 8,
+                defaultSelectedMaxCpus: 4,
+            },
+            field: "max_cpu_cores",
+            expected: 3,
+        },
+    ])(
+        "fresh launch clamping: $name",
+        ({ preset, step, configOverrides, field, expected }) => {
+            const desc = {
+                ...makePresetAppDesc([step], [preset]),
+                ...configOverrides,
+            };
+            const result = initAppLaunchValues(t, desc);
+            expect(result.requirements[0][field]).toBe(expected);
+        }
+    );
 
     test("does not apply incompatible preset (tool requires GPUs)", () => {
         const desc = makePresetAppDesc(
@@ -670,6 +709,67 @@ describe("initAppLaunchValues resource presets", () => {
         const result = initAppLaunchValues(t, desc);
         expect(result.requirements[0].resource_preset_id).toBe("preset-6cpu");
         expect(result.requirements[0].max_cpu_cores).toBe(6);
+    });
+
+    test("relaunch: defaultMaxMemory clamps preset memory for matching", () => {
+        const preset = {
+            id: "preset-highmem",
+            label: "HighMem",
+            max_cpu_cores: 2,
+            min_memory_limit: 32 * GiB,
+            max_gpus: 0,
+            time_limit_seconds: null,
+            is_default: true,
+            is_enabled: true,
+        };
+        const desc = {
+            ...makePresetAppDesc(
+                [
+                    {
+                        step_number: 0,
+                        default_cpu_cores: 2,
+                        default_memory: 16 * GiB,
+                        default_gpus: 0,
+                    },
+                ],
+                [preset]
+            ),
+            defaultMaxMemory: 16 * GiB,
+        };
+        const result = initAppLaunchValues(t, desc);
+        expect(result.requirements[0].resource_preset_id).toBe(
+            "preset-highmem"
+        );
+    });
+
+    test("relaunch: matches preset with GPUs when step has no GPU limit", () => {
+        const preset = {
+            id: "preset-gpu2",
+            label: "GPU-2",
+            max_cpu_cores: 4,
+            min_memory_limit: 17179869184,
+            max_gpus: 2,
+            time_limit_seconds: null,
+            is_default: false,
+            is_enabled: true,
+        };
+        // No max_gpus on the step, so effective GPUs = preset value (2).
+        const desc = makePresetAppDesc(
+            [
+                {
+                    step_number: 0,
+                    max_cpu_cores: 8,
+                    memory_limit: 34359738368,
+                    default_cpu_cores: 4,
+                    default_memory: 17179869184,
+                    default_gpus: 2,
+                },
+            ],
+            [preset]
+        );
+        const result = initAppLaunchValues(t, desc);
+        expect(result.requirements[0].resource_preset_id).toBe("preset-gpu2");
+        expect(result.requirements[0].max_gpus).toBe(2);
     });
 });
 
