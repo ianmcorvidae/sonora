@@ -158,16 +158,19 @@ const initAppLaunchValues = (
     };
 
     // If no default_max_cpu_cores is returned from the API,
-    // then use the default from configs (if it's less than the actual max)
-    // so the max is not automatically submitted by the services.
+    // then use the default selected value from configs (if it's less than
+    // the tool's max) so the max is not automatically submitted by the
+    // services. This uses defaultSelectedMaxCpus (the conservative
+    // pre-selection), not defaultMaxCPUCores (the system ceiling).
+    const defaultCpuSelection = defaultSelectedMaxCpus || defaultMaxCPUCores;
     const reqInitValues = requirements?.map(
         ({
             step_number,
             max_cpu_cores,
             memory_limit,
-            default_max_cpu_cores = max_cpu_cores < defaultMaxCPUCores
+            default_max_cpu_cores = max_cpu_cores < defaultCpuSelection
                 ? max_cpu_cores
-                : defaultMaxCPUCores,
+                : defaultCpuSelection,
             default_cpu_cores = 0,
             default_memory = 0,
             default_disk_space = 0,
