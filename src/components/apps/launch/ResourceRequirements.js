@@ -14,7 +14,12 @@ import numeral from "numeral";
 
 import constants from "../../../constants";
 
-import { cpuCeiling, isPresetCompatible, memoryCeiling } from "./formatters";
+import {
+    cpuCeiling,
+    formatTimeLimitHHMM,
+    isPresetCompatible,
+    memoryCeiling,
+} from "./formatters";
 import InitialDurationField from "./InitialDurationField";
 
 import ids from "./ids";
@@ -204,11 +209,7 @@ const ResourcePresetPicker = ({
                         label += `, ${preset.max_gpus} GPU`;
                     }
                     if (preset.time_limit_seconds) {
-                        const hours = preset.time_limit_seconds / 3600;
-                        label +=
-                            hours >= 1
-                                ? `, ${hours}h`
-                                : `, ${preset.time_limit_seconds / 60}m`;
+                        label += `, ${formatTimeLimitHHMM(preset.time_limit_seconds)}`;
                     }
                     label += ")";
                     return (

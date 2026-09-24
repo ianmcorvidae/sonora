@@ -542,6 +542,21 @@ const buildDurationLimitList = (maxSeconds) => {
 };
 
 /**
+ * Formats a duration in seconds as a compact HH:MM string.
+ * Used for displaying preset time limits in the admin table and
+ * the launch wizard's preset picker.
+ *
+ * @param {number|null} seconds - The duration in seconds.
+ * @returns {string} - The formatted time (e.g. "02:00", "148:30") or "—" if null.
+ */
+const formatTimeLimitHHMM = (seconds) => {
+    if (seconds == null) return "—";
+    const hours = Math.floor(seconds / SECONDS_PER_HOUR);
+    const mins = Math.floor((seconds % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE);
+    return [hours, mins].map((n) => String(n).padStart(2, "0")).join(":");
+};
+
+/**
  * Formats a duration given in seconds as a human-readable string.
  *
  * @param {number} seconds - The duration in seconds.
@@ -564,6 +579,7 @@ export {
     cpuCeiling,
     formatDuration,
     formatSubmission,
+    formatTimeLimitHHMM,
     initAppLaunchValues,
     initGroupValues,
     isPresetCompatible,

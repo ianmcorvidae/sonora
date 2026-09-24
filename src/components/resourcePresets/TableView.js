@@ -5,6 +5,7 @@ import ids from "./ids";
 
 import buildID from "components/utils/DebugIDUtil";
 import { formatFileSize } from "components/data/utils";
+import { formatTimeLimitHHMM } from "components/apps/launch/formatters";
 import TableLoading from "components/table/TableLoading";
 import EmptyTable from "components/table/EmptyTable";
 import WrappedErrorHandler from "components/error/WrappedErrorHandler";
@@ -36,15 +37,6 @@ import {
     MoreVert as MoreVertIcon,
     Star as StarIcon,
 } from "@mui/icons-material";
-
-const formatTimeLimit = (seconds) => {
-    if (seconds == null) return "—";
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    if (hours > 0 && minutes > 0) return `${hours}h ${minutes}m`;
-    if (hours > 0) return `${hours}h`;
-    return `${minutes}m`;
-};
 
 function PresetDotMenu({ baseId, preset, onEdit, onDelete, onSetDefault }) {
     const { t } = useTranslation("resourcePresets");
@@ -191,7 +183,7 @@ function TableView({
                                             {preset.max_gpus || 0}
                                         </TableCell>
                                         <TableCell>
-                                            {formatTimeLimit(
+                                            {formatTimeLimitHHMM(
                                                 preset.time_limit_seconds
                                             )}
                                         </TableCell>
