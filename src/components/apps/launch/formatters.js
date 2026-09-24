@@ -7,6 +7,30 @@ import AppParamTypes from "components/models/AppParamTypes";
 import TOOL_TYPES from "components/models/ToolTypes";
 import { formatDuration as formatDurationStr } from "date-fns";
 
+import constants from "../../../constants";
+
+/**
+ * Compute the effective CPU ceiling for a step, falling back through the
+ * step's own limit, a caller-provided config default, and finally a
+ * hard-coded 8.
+ *
+ * @param {number|null} stepMax - The step's max_cpu_cores.
+ * @param {number|null} configDefault - Configured max CPU cores for the context.
+ * @returns {number}
+ */
+const cpuCeiling = (stepMax, configDefault) => stepMax || configDefault || 8;
+
+/**
+ * Compute the effective memory ceiling for a step, falling back through the
+ * step's own limit, a caller-provided config default, and finally 16 GiB.
+ *
+ * @param {number|null} stepMax - The step's memory_limit.
+ * @param {number|null} configDefault - Configured max memory for the context.
+ * @returns {number}
+ */
+const memoryCeiling = (stepMax, configDefault) =>
+    stepMax || configDefault || 16 * constants.ONE_GiB;
+
 /**
  * Initializes the submission and form values from the given props.
  *
@@ -104,11 +128,11 @@ const initAppLaunchValues = (
     const effectivePresetValues = (preset, step) => ({
         cpu: Math.min(
             preset.max_cpu_cores,
-            step.max_cpu_cores || defaultMaxCPUCores || 8
+            cpuCeiling(step.max_cpu_cores, defaultMaxCPUCores)
         ),
         memory: Math.min(
             preset.min_memory_limit,
-            step.memory_limit || defaultMaxMemory || 16 * 1073741824
+            memoryCeiling(step.memory_limit, defaultMaxMemory)
         ),
         gpus:
             step.max_gpus != null
@@ -537,9 +561,11 @@ const formatDuration = (seconds) => {
 
 export {
     buildDurationLimitList,
+    cpuCeiling,
     formatDuration,
     formatSubmission,
     initAppLaunchValues,
     initGroupValues,
     isPresetCompatible,
+    memoryCeiling,
 };

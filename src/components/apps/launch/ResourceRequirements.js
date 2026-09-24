@@ -14,7 +14,7 @@ import numeral from "numeral";
 
 import constants from "../../../constants";
 
-import { isPresetCompatible } from "./formatters";
+import { cpuCeiling, isPresetCompatible, memoryCeiling } from "./formatters";
 import InitialDurationField from "./InitialDurationField";
 
 import ids from "./ids";
@@ -122,14 +122,14 @@ const ResourcePresetPicker = ({
             `requirements.${index}.max_cpu_cores`,
             Math.min(
                 preset.max_cpu_cores,
-                max_cpu_cores || defaultMaxCPUCores || 8
+                cpuCeiling(max_cpu_cores, defaultMaxCPUCores)
             )
         );
         setFieldValue(
             `requirements.${index}.min_memory_limit`,
             Math.min(
                 preset.min_memory_limit,
-                memory_limit || defaultMaxMemory || 16 * constants.ONE_GiB
+                memoryCeiling(memory_limit, defaultMaxMemory)
             )
         );
         setFieldValue(`requirements.${index}.max_gpus`, preset.max_gpus || 0);
@@ -284,12 +284,12 @@ const StepResourceRequirementsForm = ({
     const cpuCoreList = buildLimitList(
         1,
         min_cpu_cores || 0,
-        max_cpu_cores || defaultMaxCPUCores || 8
+        cpuCeiling(max_cpu_cores, defaultMaxCPUCores)
     );
     const minMemoryList = buildLimitList(
         2 * constants.ONE_GiB,
         min_memory_limit || 0,
-        memory_limit || defaultMaxMemory || 16 * constants.ONE_GiB
+        memoryCeiling(memory_limit, defaultMaxMemory)
     );
     const minDiskSpaceList = buildLimitList(
         constants.ONE_GiB,
