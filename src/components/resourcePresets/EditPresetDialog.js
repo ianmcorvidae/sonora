@@ -9,6 +9,8 @@ import FormTextField from "components/forms/FormTextField";
 import FormNumberField from "components/forms/FormNumberField";
 import FormSwitch from "components/forms/FormSwitch";
 
+import constants from "../../constants";
+
 import {
     Button,
     Dialog,
@@ -16,8 +18,6 @@ import {
     DialogContent,
     DialogTitle,
 } from "@mui/material";
-
-const GIB = 1073741824;
 
 function EditPresetDialog({ open, onClose, preset, onSave }) {
     const { t } = useTranslation("resourcePresets");
@@ -28,7 +28,7 @@ function EditPresetDialog({ open, onClose, preset, onSave }) {
         description: preset?.description || "",
         max_cpu_cores: preset?.max_cpu_cores || "",
         min_memory_limit_gib: preset?.min_memory_limit
-            ? preset.min_memory_limit / GIB
+            ? preset.min_memory_limit / constants.ONE_GiB
             : "",
         max_gpus: preset?.max_gpus ?? 0,
         time_limit_seconds: preset?.time_limit_seconds || "",
@@ -70,7 +70,9 @@ function EditPresetDialog({ open, onClose, preset, onSave }) {
         const result = {
             label: rest.label,
             max_cpu_cores: Number(rest.max_cpu_cores),
-            min_memory_limit: Math.round(min_memory_limit_gib * GIB),
+            min_memory_limit: Math.round(
+                min_memory_limit_gib * constants.ONE_GiB
+            ),
             max_gpus: rest.max_gpus !== "" ? Number(rest.max_gpus) : 0,
             display_order:
                 rest.display_order !== "" ? Number(rest.display_order) : 0,

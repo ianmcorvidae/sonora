@@ -10,6 +10,8 @@ import {
 } from "components/apps/launch/formatters";
 import validate from "components/apps/launch/validate";
 
+import constants from "../../constants";
+
 import { mockAxios } from "../../../stories/axiosMock";
 
 import { DEWordCount } from "../../../stories/apps/launch/DEWordCount";
@@ -422,7 +424,7 @@ describe("initAppLaunchValues resource presets", () => {
         id: "preset-small",
         label: "Small",
         max_cpu_cores: 2,
-        min_memory_limit: 8589934592, // 8 GiB
+        min_memory_limit: 8 * constants.ONE_GiB,
         max_gpus: 0,
         time_limit_seconds: 7200,
         is_default: true,
@@ -433,24 +435,30 @@ describe("initAppLaunchValues resource presets", () => {
         id: "preset-gpu",
         label: "GPU",
         max_cpu_cores: 4,
-        min_memory_limit: 17179869184, // 16 GiB
+        min_memory_limit: 16 * constants.ONE_GiB,
         max_gpus: 1,
         time_limit_seconds: null,
         is_default: false,
         is_enabled: true,
     };
 
-    const GiB = 1073741824;
-
     test("applies default preset to compatible step", () => {
         const desc = makePresetAppDesc(
-            [{ step_number: 0, max_cpu_cores: 8, memory_limit: 34359738368 }],
+            [
+                {
+                    step_number: 0,
+                    max_cpu_cores: 8,
+                    memory_limit: 32 * constants.ONE_GiB,
+                },
+            ],
             [smallPreset, gpuPreset]
         );
         const result = initAppLaunchValues(t, desc);
         expect(result.requirements[0].resource_preset_id).toBe("preset-small");
         expect(result.requirements[0].max_cpu_cores).toBe(2);
-        expect(result.requirements[0].min_memory_limit).toBe(8589934592);
+        expect(result.requirements[0].min_memory_limit).toBe(
+            8 * constants.ONE_GiB
+        );
         expect(result.requirements[0].max_gpus).toBe(0);
     });
 
@@ -458,7 +466,11 @@ describe("initAppLaunchValues resource presets", () => {
         {
             name: "CPU: step ceiling below preset",
             preset: { ...smallPreset, max_cpu_cores: 4 },
-            step: { step_number: 0, max_cpu_cores: 1, memory_limit: 34 * GiB },
+            step: {
+                step_number: 0,
+                max_cpu_cores: 1,
+                memory_limit: 34 * constants.ONE_GiB,
+            },
             configOverrides: {},
             field: "max_cpu_cores",
             expected: 1,
@@ -466,10 +478,14 @@ describe("initAppLaunchValues resource presets", () => {
         {
             name: "Memory: step ceiling below preset",
             preset: smallPreset,
-            step: { step_number: 0, max_cpu_cores: 8, memory_limit: 4 * GiB },
+            step: {
+                step_number: 0,
+                max_cpu_cores: 8,
+                memory_limit: 4 * constants.ONE_GiB,
+            },
             configOverrides: {},
             field: "min_memory_limit",
-            expected: 4 * GiB,
+            expected: 4 * constants.ONE_GiB,
         },
         {
             name: "Memory: no step ceiling and no config → preset value used",
@@ -477,7 +493,7 @@ describe("initAppLaunchValues resource presets", () => {
             step: { step_number: 0, max_cpu_cores: 8 },
             configOverrides: {},
             field: "min_memory_limit",
-            expected: 8 * GiB,
+            expected: 8 * constants.ONE_GiB,
         },
         {
             name: "CPU: config default clamps when no step ceiling",
@@ -489,11 +505,14 @@ describe("initAppLaunchValues resource presets", () => {
         },
         {
             name: "Memory: config default clamps when no step ceiling",
-            preset: { ...smallPreset, min_memory_limit: 32 * GiB },
+            preset: {
+                ...smallPreset,
+                min_memory_limit: 32 * constants.ONE_GiB,
+            },
             step: { step_number: 0 },
-            configOverrides: { defaultMaxMemory: 16 * GiB },
+            configOverrides: { defaultMaxMemory: 16 * constants.ONE_GiB },
             field: "min_memory_limit",
-            expected: 16 * GiB,
+            expected: 16 * constants.ONE_GiB,
         },
         {
             name: "CPU: step ceiling wins over config defaults",
@@ -587,7 +606,7 @@ describe("initAppLaunchValues resource presets", () => {
             id: "preset-medium",
             label: "Medium",
             max_cpu_cores: 4,
-            min_memory_limit: 17179869184, // 16 GiB
+            min_memory_limit: 16 * constants.ONE_GiB,
             max_gpus: 0,
             time_limit_seconds: null,
             is_default: true,
@@ -600,9 +619,9 @@ describe("initAppLaunchValues resource presets", () => {
                 {
                     step_number: 0,
                     max_cpu_cores: 2,
-                    memory_limit: 34359738368,
+                    memory_limit: 32 * constants.ONE_GiB,
                     default_cpu_cores: 2,
-                    default_memory: 17179869184,
+                    default_memory: 16 * constants.ONE_GiB,
                     default_gpus: 0,
                 },
             ],
@@ -612,7 +631,9 @@ describe("initAppLaunchValues resource presets", () => {
         expect(result.requirements[0].resource_preset_id).toBe("preset-medium");
         // Values should be the saved values (relaunch), not the preset's raw values
         expect(result.requirements[0].max_cpu_cores).toBe(2);
-        expect(result.requirements[0].min_memory_limit).toBe(17179869184);
+        expect(result.requirements[0].min_memory_limit).toBe(
+            16 * constants.ONE_GiB
+        );
     });
 
     test("relaunch: no matching preset falls back to Custom", () => {
@@ -620,7 +641,7 @@ describe("initAppLaunchValues resource presets", () => {
             id: "preset-small",
             label: "Small",
             max_cpu_cores: 2,
-            min_memory_limit: 8589934592, // 8 GiB
+            min_memory_limit: 8 * constants.ONE_GiB,
             max_gpus: 0,
             time_limit_seconds: null,
             is_default: true,
@@ -633,7 +654,7 @@ describe("initAppLaunchValues resource presets", () => {
                     step_number: 0,
                     max_cpu_cores: 8,
                     default_cpu_cores: 3,
-                    default_memory: 8589934592,
+                    default_memory: 8 * constants.ONE_GiB,
                     default_gpus: 0,
                 },
             ],
@@ -649,7 +670,7 @@ describe("initAppLaunchValues resource presets", () => {
             id: "preset-large",
             label: "Large",
             max_cpu_cores: 8,
-            min_memory_limit: 34359738368, // 32 GiB
+            min_memory_limit: 32 * constants.ONE_GiB,
             max_gpus: 0,
             time_limit_seconds: null,
             is_default: true,
@@ -661,9 +682,9 @@ describe("initAppLaunchValues resource presets", () => {
                 {
                     step_number: 0,
                     max_cpu_cores: 16,
-                    memory_limit: 68719476736,
+                    memory_limit: 64 * constants.ONE_GiB,
                     default_cpu_cores: 2,
-                    default_memory: 8589934592,
+                    default_memory: 8 * constants.ONE_GiB,
                     default_gpus: 0,
                 },
             ],
@@ -674,7 +695,9 @@ describe("initAppLaunchValues resource presets", () => {
         expect(result.requirements[0].resource_preset_id).toBeNull();
         // Should use the saved values
         expect(result.requirements[0].max_cpu_cores).toBe(2);
-        expect(result.requirements[0].min_memory_limit).toBe(8589934592);
+        expect(result.requirements[0].min_memory_limit).toBe(
+            8 * constants.ONE_GiB
+        );
     });
 
     test("relaunch: uses defaultMaxCPUCores (not defaultSelectedMaxCpus) for clamping", () => {
@@ -685,7 +708,7 @@ describe("initAppLaunchValues resource presets", () => {
             id: "preset-6cpu",
             label: "6-CPU",
             max_cpu_cores: 6,
-            min_memory_limit: 17179869184, // 16 GiB
+            min_memory_limit: 16 * constants.ONE_GiB,
             max_gpus: 0,
             time_limit_seconds: null,
             is_default: true,
@@ -697,7 +720,7 @@ describe("initAppLaunchValues resource presets", () => {
                     {
                         step_number: 0,
                         default_cpu_cores: 6,
-                        default_memory: 17179869184,
+                        default_memory: 16 * constants.ONE_GiB,
                         default_gpus: 0,
                     },
                 ],
@@ -716,7 +739,7 @@ describe("initAppLaunchValues resource presets", () => {
             id: "preset-highmem",
             label: "HighMem",
             max_cpu_cores: 2,
-            min_memory_limit: 32 * GiB,
+            min_memory_limit: 32 * constants.ONE_GiB,
             max_gpus: 0,
             time_limit_seconds: null,
             is_default: true,
@@ -728,13 +751,13 @@ describe("initAppLaunchValues resource presets", () => {
                     {
                         step_number: 0,
                         default_cpu_cores: 2,
-                        default_memory: 16 * GiB,
+                        default_memory: 16 * constants.ONE_GiB,
                         default_gpus: 0,
                     },
                 ],
                 [preset]
             ),
-            defaultMaxMemory: 16 * GiB,
+            defaultMaxMemory: 16 * constants.ONE_GiB,
         };
         const result = initAppLaunchValues(t, desc);
         expect(result.requirements[0].resource_preset_id).toBe(
@@ -747,7 +770,7 @@ describe("initAppLaunchValues resource presets", () => {
             id: "preset-gpu2",
             label: "GPU-2",
             max_cpu_cores: 4,
-            min_memory_limit: 17179869184,
+            min_memory_limit: 16 * constants.ONE_GiB,
             max_gpus: 2,
             time_limit_seconds: null,
             is_default: false,
@@ -759,9 +782,9 @@ describe("initAppLaunchValues resource presets", () => {
                 {
                     step_number: 0,
                     max_cpu_cores: 8,
-                    memory_limit: 34359738368,
+                    memory_limit: 32 * constants.ONE_GiB,
                     default_cpu_cores: 4,
-                    default_memory: 17179869184,
+                    default_memory: 16 * constants.ONE_GiB,
                     default_gpus: 2,
                 },
             ],
@@ -792,7 +815,7 @@ describe("formatSubmission strips resource_preset_id", () => {
                 {
                     step_number: 0,
                     max_cpu_cores: 2,
-                    min_memory_limit: 8589934592,
+                    min_memory_limit: 8 * constants.ONE_GiB,
                     max_gpus: 0,
                     gpu_models: [],
                     resource_preset_id: "preset-small",
@@ -827,7 +850,7 @@ describe("formatSubmission strips resource_preset_id", () => {
                 {
                     step_number: 0,
                     max_cpu_cores: 4,
-                    min_memory_limit: 17179869184,
+                    min_memory_limit: 16 * constants.ONE_GiB,
                     max_gpus: 1,
                     gpu_models: ["A100"],
                     resource_preset_id: null,
