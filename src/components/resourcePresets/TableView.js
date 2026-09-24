@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { useTranslation } from "i18n";
-import numeral from "numeral";
 
 import ids from "./ids";
 
 import buildID from "components/utils/DebugIDUtil";
+import { formatFileSize } from "components/data/utils";
 import TableLoading from "components/table/TableLoading";
 import EmptyTable from "components/table/EmptyTable";
 import WrappedErrorHandler from "components/error/WrappedErrorHandler";
@@ -36,11 +36,6 @@ import {
     MoreVert as MoreVertIcon,
     Star as StarIcon,
 } from "@mui/icons-material";
-
-const formatMemory = (bytes) => {
-    if (bytes == null) return "—";
-    return numeral(bytes).format("0.0 ib");
-};
 
 const formatTimeLimit = (seconds) => {
     if (seconds == null) return "—";
@@ -188,7 +183,7 @@ function TableView({
                                             {preset.max_cpu_cores}
                                         </TableCell>
                                         <TableCell>
-                                            {formatMemory(
+                                            {formatFileSize(
                                                 preset.min_memory_limit
                                             )}
                                         </TableCell>

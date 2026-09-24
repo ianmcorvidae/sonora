@@ -6,6 +6,7 @@ import ids from "./ids";
 
 import buildID from "components/utils/DebugIDUtil";
 import FormTextField from "components/forms/FormTextField";
+import FormIntegerField from "components/forms/FormIntegerField";
 import FormNumberField from "components/forms/FormNumberField";
 import FormSwitch from "components/forms/FormSwitch";
 
@@ -132,7 +133,7 @@ function EditPresetDialog({ open, onClose, preset, onSave }) {
                                 name="max_cpu_cores"
                                 label={t("cpuCores")}
                                 required
-                                component={FormNumberField}
+                                component={FormIntegerField}
                             />
                             <Field
                                 id={buildID(baseId, ids.MEMORY_FIELD)}
@@ -145,19 +146,19 @@ function EditPresetDialog({ open, onClose, preset, onSave }) {
                                 id={buildID(baseId, ids.GPU_FIELD)}
                                 name="max_gpus"
                                 label={t("gpus")}
-                                component={FormNumberField}
+                                component={FormIntegerField}
                             />
                             <Field
                                 id={buildID(baseId, ids.TIME_LIMIT_FIELD)}
                                 name="time_limit_seconds"
                                 label={t("timeLimit")}
-                                component={FormNumberField}
+                                component={FormIntegerField}
                             />
                             <Field
                                 id={buildID(baseId, ids.DISPLAY_ORDER_FIELD)}
                                 name="display_order"
                                 label={t("displayOrder")}
-                                component={FormNumberField}
+                                component={FormIntegerField}
                             />
                             <Field
                                 id={buildID(baseId, ids.ENABLED_SWITCH)}

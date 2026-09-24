@@ -58,6 +58,7 @@ function Listing({ baseId, showErrorAnnouncer }) {
         onSuccess: () => {
             announce({ text: t("presetDeleted") });
             queryClient.invalidateQueries([RESOURCE_PRESETS_LISTING_QUERY_KEY]);
+            setPresetToDelete(null);
         },
         onError: (e) => {
             showErrorAnnouncer(t("presetDeleteError"), e);

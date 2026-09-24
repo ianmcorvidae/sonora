@@ -162,7 +162,7 @@ const AppLaunchForm = (props) => {
         defaultOutputDir,
         createSavedLaunch,
         submitAnalysis,
-        resourcePresets: resourcePresetsRaw,
+        resourcePresets = [],
         app: {
             id: app_id,
             version_id,
@@ -174,8 +174,6 @@ const AppLaunchForm = (props) => {
             max_time_limit_seconds,
         },
     } = props;
-
-    const resourcePresets = resourcePresetsRaw || [];
 
     const formId = buildID(baseId, ids.APP_LAUNCH_FORM);
     const stepIdParams = buildID(formId, ids.TEMPLATE_GROUP);
