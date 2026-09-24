@@ -27,6 +27,7 @@ import ids from "./ids";
 import styles from "./styles";
 
 import buildID from "components/utils/DebugIDUtil";
+import { formatFileSize } from "components/data/utils";
 import FormCheckbox from "components/forms/FormCheckbox";
 import FormSelectField from "components/forms/FormSelectField";
 import TOOL_TYPES from "components/models/ToolTypes";
@@ -204,14 +205,26 @@ const ResourcePresetPicker = ({
             >
                 {filteredPresets.map((preset) => {
                     const tooltip = getClampedTooltip(preset);
-                    let label = `${preset.label} (${preset.max_cpu_cores} CPU, ${numeral(preset.min_memory_limit).format("0 ib")}`;
-                    if (preset.max_gpus > 0) {
-                        label += `, ${preset.max_gpus} GPU`;
+                    const hasGpu = preset.max_gpus > 0;
+                    const hasTime = !!preset.time_limit_seconds;
+                    const labelParams = {
+                        label: preset.label,
+                        cpu: preset.max_cpu_cores,
+                        memory: formatFileSize(preset.min_memory_limit),
+                        gpus: preset.max_gpus,
+                        time: formatTimeLimitHHMM(preset.time_limit_seconds),
+                    };
+
+                    let labelKey = "presetLabel";
+                    if (hasGpu && hasTime) {
+                        labelKey = "presetLabelGpuTime";
+                    } else if (hasGpu) {
+                        labelKey = "presetLabelGpu";
+                    } else if (hasTime) {
+                        labelKey = "presetLabelTime";
                     }
-                    if (preset.time_limit_seconds) {
-                        label += `, ${formatTimeLimitHHMM(preset.time_limit_seconds)}`;
-                    }
-                    label += ")";
+
+                    const label = t(labelKey, labelParams);
                     return (
                         <Tooltip
                             key={preset.id}
