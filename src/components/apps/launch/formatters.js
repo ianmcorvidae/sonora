@@ -412,6 +412,8 @@ const formatSubmission = (
     }
 ) => {
     const formattedRequirements = requirements.map(
+        // Destructure resource_preset_id out so it is excluded from the
+        // submission payload (it's only client-side)
         ({ resource_preset_id, ...req }) => ({
             ...req,
             min_cpu_cores: req.max_cpu_cores,
